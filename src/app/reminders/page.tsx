@@ -50,7 +50,7 @@ export default function RemindersPage() {
           <div className="text-center text-white/60 py-16">
             <Bell className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <p className="text-xl">Reminders feature coming soon!</p>
-            <p className="mt-2">You'll be able to create and manage your study reminders here.</p>
+            <p className="mt-2">You&apos;ll be able to create and manage your study reminders here.</p>
           </div>
         </motion.div>
       </div>
