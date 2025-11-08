@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface AIMessage {
   role: 'user' | 'assistant' | 'system';
@@ -14,7 +14,7 @@ interface AIResponse {
 
 class AIService {
   private openai: OpenAI | null = null;
-  private gemini: GoogleGenAI | null = null;
+  private gemini: GoogleGenerativeAI | null = null;
   private provider: 'openai' | 'gemini';
 
   constructor() {
@@ -24,9 +24,8 @@ class AIService {
       this.openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
       });
-    } else if (this.provider === 'gemini') {
-      // GoogleGenAI uses GOOGLE_API_KEY from environment automatically
-      this.gemini = new GoogleGenAI({});
+    } else if (this.provider === 'gemini' && process.env.GOOGLE_API_KEY) {
+      this.gemini = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
     }
   }
 
@@ -115,6 +114,11 @@ Current date and time: ${new Date().toISOString()}`;
       throw new Error('Gemini not initialized');
     }
 
+    // Use the working model name with models/ prefix
+    const model = this.gemini.getGenerativeModel({ 
+      model: process.env.GEMINI_MODEL || 'models/gemini-2.5-flash' 
+    });
+
     // Combine system prompt with conversation
     const conversationText = messages.map(msg => {
       const prefix = msg.role === 'user' ? 'Student:' : 'EduBot:';
@@ -123,14 +127,13 @@ Current date and time: ${new Date().toISOString()}`;
 
     const prompt = `${systemPrompt}\n\n${conversationText}\n\nEduBot:`;
 
-    const response = await this.gemini.models.generateContent({
-      model: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp',
-      contents: prompt,
-    });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
 
     return {
-      content: response.text || 'No response generated',
-      model: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp',
+      content: text,
+      model: process.env.GEMINI_MODEL || 'models/gemini-2.5-flash',
     };
   }
 

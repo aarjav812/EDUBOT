@@ -1,45 +1,106 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
+# Dependencies
+node_modules/
+.pnp
 .pnp.js
-.yarn/install-state.gz
+yarn.lock
+package-lock.json
 
-# testing
-/coverage
+# Next.js
+.next/
+out/
+.next
+build/
+dist/
 
-# next.js
-/.next/
-/out/
-
-# production
+# Production
 /build
 
-# misc
-.DS_Store
-*.pem
+# Testing
+coverage/
+.nyc_output/
+*.lcov
 
-# debug
+# Environment Variables (CRITICAL - Never commit these)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+.env.production
+.env.development
+.env.test
+
+# IDE & Editor
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.iml
+*.launch
+.settings/
+*.sublime-workspace
+
+# OS Files
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
 
-# local env files
-.env*.local
+# Misc
+*.pem
+*.key
+*.cert
+.cache/
+.next/cache/
+.eslintcache
 
-# vercel
+# Test files (local testing only)
+test.js
+test-*.js
+list-*.js
+*-test.js
+
+# Turbopack
+.turbo/
+
+# Vercel
 .vercel
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+tsconfig.tsbuildinfo
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
-# OS
-Thumbs.db
+# API Keys & Secrets (if accidentally committed)
+*_apikey*
+*_secret*
+*_password*
+*_token*
