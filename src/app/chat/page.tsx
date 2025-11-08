@@ -2,12 +2,13 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bot, ArrowLeft, Sparkles } from 'lucide-react'
+import { Bot, ArrowLeft, Sparkles, LogOut, User, Menu } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import api from '@/lib/api'
 import MessageBubble from '@/components/Chat/MessageBubble'
 import TypingIndicator from '@/components/Chat/TypingIndicator'
 import ChatInput from '@/components/Chat/ChatInput'
-import { getBotResponse } from '@/lib/chatUtils'
 
 interface Message {
   id: string
@@ -18,24 +19,34 @@ interface Message {
 
 const INITIAL_MESSAGE: Message = {
   id: '1',
-  text: "Hello! I'm EduBot, your intelligent campus companion. How can I help you today?",
+  text: "Hello! I'm EduBot, your intelligent AI companion. I can help you study, explain concepts, create study plans, and set reminders. How can I assist you today?",
   sender: 'bot',
   timestamp: new Date(),
 }
 
 const QUICK_SUGGESTIONS = [
-  'Show my deadlines',
-  'Upcoming events',
-  'Access syllabus',
-  'Exam schedule',
+  'Help me study for exams',
+  'Explain a difficult concept',
+  'Create a study plan',
+  'Set a reminder for homework',
 ]
 
 export default function ChatPage() {
   const router = useRouter()
+  const { user, token, logout } = useAuth()
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [conversationId] = useState(() => `conv_${Date.now()}`)
+  const [showMenu, setShowMenu] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!user && !token) {
+      router.push('/login')
+    }
+  }, [user, token, router])
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -47,7 +58,7 @@ export default function ChatPage() {
 
   const handleSendMessage = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputValue.trim() || isTyping) return
+    if (!inputValue.trim() || isTyping || !token) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -61,26 +72,56 @@ export default function ChatPage() {
     setInputValue('')
     setIsTyping(true)
 
-    // Simulate bot response
-    setTimeout(() => {
-      const botMessage: Message = {
+    try {
+      // Call the real AI backend
+      const response = await api.chat.sendMessage(currentInput, conversationId, token)
+      
+      if (response.success && response.data?.assistantMessage) {
+        const botMessage: Message = {
+          id: response.data.assistantMessage._id || (Date.now() + 1).toString(),
+          text: response.data.assistantMessage.content,
+          sender: 'bot',
+          timestamp: new Date(response.data.assistantMessage.createdAt || Date.now()),
+        }
+        setMessages((prev) => [...prev, botMessage])
+      } else {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: response.message || "I'm sorry, I encountered an error. Please try again.",
+          sender: 'bot',
+          timestamp: new Date(),
+        }
+        setMessages((prev) => [...prev, errorMessage])
+      }
+    } catch (error: any) {
+      console.error('Error sending message:', error)
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: getBotResponse(currentInput),
+        text: error.message || "I'm sorry, I'm having trouble connecting right now. Please try again later.",
         sender: 'bot',
         timestamp: new Date(),
       }
-      setMessages((prev) => [...prev, botMessage])
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
       setIsTyping(false)
-    }, 800 + Math.random() * 400)
-  }, [inputValue, isTyping])
+    }
+  }, [inputValue, isTyping, token, conversationId])
 
   const handleSuggestionClick = useCallback((suggestion: string) => {
     setInputValue(suggestion)
   }, [])
 
-  const handleGoBack = useCallback(() => {
-    router.push('/')
-  }, [router])
+  const handleLogout = () => {
+    logout()
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-black">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    )
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
@@ -133,7 +174,7 @@ export default function ChatPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <button
-              onClick={handleGoBack}
+              onClick={() => router.push('/')}
               className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -151,11 +192,46 @@ export default function ChatPage() {
                 </div>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">EduBot</h1>
-                <p className="text-xs text-white/60">Online</p>
+                <h1 className="text-xl font-bold text-white">EduBot AI</h1>
+                <p className="text-xs text-white/60">Powered by {process.env.NEXT_PUBLIC_AI_PROVIDER || 'AI'}</p>
               </div>
             </div>
-            <div className="w-20" /> {/* Spacer for alignment */}
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+              >
+                <User className="w-5 h-5" />
+                <span className="hidden sm:inline text-sm">{user.name}</span>
+                <Menu className="w-4 h-4" />
+              </button>
+
+              {showMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute right-0 mt-2 w-48 bg-slate-800/90 backdrop-blur-lg rounded-lg border border-white/10 overflow-hidden shadow-xl z-50"
+                >
+                  <button
+                    onClick={() => {
+                      setShowMenu(false)
+                      router.push('/reminders')
+                    }}
+                    className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Reminders
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left text-red-300 hover:bg-white/10 transition-colors flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
       </motion.header>

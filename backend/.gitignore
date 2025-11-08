@@ -5,20 +5,13 @@ node_modules/
 yarn.lock
 package-lock.json
 
-# Next.js
-.next/
-out/
-.next
-build/
+# Build & Distribution
 dist/
-
-# Production
-/build
-
-# Testing
-coverage/
-.nyc_output/
-*.lcov
+build/
+out/
+.next/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # Environment Variables (CRITICAL - Never commit these)
 .env
@@ -31,36 +24,7 @@ coverage/
 .env.development
 .env.test
 
-# IDE & Editor
-.vscode/
-.idea/
-.DS_Store
-*.swp
-*.swo
-*~
-.sublime-project
-.sublime-workspace
-*.sublime-project
-*.sublime-workspace
-.project
-.classpath
-.c9/
-*.iml
-*.launch
-.settings/
-*.sublime-workspace
-
-# OS Files
-Thumbs.db
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-
-# Logs
+# Logs & Debug
 logs/
 *.log
 npm-debug.log*
@@ -69,38 +33,67 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
+# Test Files (local testing only)
+test.js
+test-*.js
+list-*.js
+*-test.js
+*.test.js
+*.spec.js
+
+# IDE & Editor
+.vscode/
+.idea/
+.project
+.classpath
+.c9/
+*.iml
+*.launch
+.settings/
+*.sublime-project
+*.sublime-workspace
+.prettierignore
+.editorconfig
+
+# OS Files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
 # Misc
 *.pem
 *.key
 *.cert
 .cache/
-.next/cache/
-.eslintcache
-
-# Test files (local testing only)
-test.js
-test-*.js
-list-*.js
-*-test.js
-
-# Turbopack
 .turbo/
-
-# Vercel
-.vercel
-
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
-tsconfig.tsbuildinfo
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
+*.sql
 
-# API Keys & Secrets (if accidentally committed)
+# Sensitive Files
 *_apikey*
 *_secret*
 *_password*
 *_token*
+credentials.json
+serviceAccountKey.json
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+*.bak
+*~
